@@ -1,6 +1,6 @@
 #!/bin/env guile3.0
 !#
-(import (ice-9 rdelim) (ice-9 popen) (ice-9 match) (ice-9 getopt-long) (sxml simple) (web server) (srfi srfi-28))
+(import (ice-9 rdelim) (ice-9 popen) (ice-9 match) (ice-9 getopt-long) (ice-9 threads) (sxml simple) (web server) (srfi srfi-28) (srfi srfi-18))
 
 (define option-spec
     '((port (single-char #\p) (value #t))))
@@ -11,10 +11,16 @@
 (if (not (exact-integer? port-number))
     (error "Port numbers must be exact integers"))
 
-(define pwd (dirname (current-filename)))
-
 (define (directory-exists? p)
     (and (file-exists? p) (eq? (stat:type (stat p)) 'directory)))
+
+(define pwd (dirname (current-filename)))
+(define venv (in-vicinity pwd "scratcher"))
+(define python (in-vicinity venv (in-vicinity "bin" "python3")))
+(if (directory-exists? venv)
+    #f
+    (system* "python3" "-m" "venv" venv))
+(system* python "-m" "pip" "install" "-I" "selenium")
 
 (define (read-string k in)
     (with-output-to-string
@@ -40,6 +46,18 @@
         (lambda () (parse in))
         (lambda () (close-pipe in))))
 
+; Cache
+(define records (fetch))
+(define time (time->seconds (current-time)))
+(define sep 3600)
+(define update-thread
+    (make-thread
+        (lambda ()
+            (if (>= (- (time->seconds (current-time)) time) sep)
+                (begin (set! time (current-time))
+                       (set! records (fetch))))
+            records)))
+
 (define (generate-rss-feed)
     (with-output-to-string
         (lambda ()
@@ -51,18 +69,10 @@
                                 (match p
                                     ((url title date)
                                      `(item (title ,title) (link ,url) (pubDate ,date)))))
-                            (fetch))))))))
+                            records)))))))
 
 (define (handler req req-body)
     (values '((content-type . (text/xml)))
             (generate-rss-feed)))
-
-(define venv (in-vicinity pwd "scratcher"))
-(define python (in-vicinity venv (in-vicinity "bin" "python3")))
-(if (directory-exists? venv)
-    #f
-    (system* "python3" "-m" "venv" venv))
-
-(system* python "-m" "pip" "install" "-I" "selenium")
 
 (run-server handler 'http `(#:port ,port-number))
