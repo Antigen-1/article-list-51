@@ -25,7 +25,7 @@ driver1 = create_driver()
 driver1.get(url)
 entries = driver1.find_elements(By.XPATH, "//*[@id=\"list-wrap\"]/a")
 entry = entries[0].get_attribute('href')
-driver1.close()
+driver1.quit()
 
 # Open the website and fetch all articles
 driver2 = create_driver()
@@ -43,6 +43,7 @@ for a in articles:
         continue
     # url title date
     coll.append([a.get_attribute('href'), text, a.find_element(By.XPATH, ".//div/div[2]/div/div/span[2]").text])
+driver2.quit()
 
 print(len(coll))
 for record in coll:
