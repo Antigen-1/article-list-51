@@ -1,14 +1,24 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+import argparse
+
+parser = argparse.ArgumentParser(prog='scratcher')
+parser.add_argument('-d', '--driver', default=False)
+args = parser.parse_args()
+driver_loc = args.driver
 
 url = "https://51cg.fun"
 
 options = webdriver.ChromeOptions()
 options.add_argument("--headless")
 options.add_argument("--disable-gpu")
+ser = Service()
+if driver_loc:
+    ser.executable_path=driver_loc
 
 # Get an entry to the website
-driver1 = webdriver.Chrome(options=options)
+driver1 = webdriver.Chrome(service=ser, options=options) if driver_loc else webdriver.Chrome(options=options)
 driver1.get(url)
 entries = driver1.find_elements(By.XPATH, "//*[@id=\"list-wrap\"]/a")
 entry = entries[0].get_attribute('href')

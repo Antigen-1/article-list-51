@@ -2,14 +2,14 @@
 !#
 (import (ice-9 rdelim) (ice-9 popen) (ice-9 match) (ice-9 getopt-long) (ice-9 threads) (sxml simple) (web server) (srfi srfi-28) (srfi srfi-18))
 
+(define (port-string? x) (exact-integer? (read (open-input-string x))))
 (define option-spec
-    '((port (single-char #\p) (value #t))))
+    `((port (single-char #\p) (value #t) (predicate ,port-string?))
+      (driver (single-char #\d) (value #t) (required? #f))))
 (define options (getopt-long (command-line) option-spec))
 (define port (option-ref options 'port #f))
-(if (not port) (error "A port number must be supplied"))
 (define port-number (read (open-input-string port)))
-(if (not (exact-integer? port-number))
-    (error "Port numbers must be exact integers"))
+(define driver (option-ref options 'driver #f))
 
 (define (directory-exists? p)
     (and (file-exists? p) (eq? (stat:type (stat p)) 'directory)))
@@ -40,7 +40,7 @@
 
 (define (fetch)
     (define in
-        (open-pipe* OPEN_READ python (in-vicinity pwd "scratcher.py")))
+        (apply open-pipe* OPEN_READ python (in-vicinity pwd "scratcher.py") (if driver (list "-d" driver) '())))
     (dynamic-wind
         (lambda () #f)
         (lambda () (parse in))
