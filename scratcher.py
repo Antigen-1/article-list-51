@@ -1,5 +1,6 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.service import Service
 import argparse
 
@@ -10,7 +11,7 @@ driver_loc = args.driver
 
 url = "https://51cg.fun"
 
-options = webdriver.FirefoxOptions()
+options = Options()
 options.add_argument("--headless")
 ser = Service()
 if driver_loc:
