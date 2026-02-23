@@ -1,6 +1,6 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.firefox.service import Service
 import argparse
 
 parser = argparse.ArgumentParser(prog='scratcher')
@@ -10,22 +10,24 @@ driver_loc = args.driver
 
 url = "https://51cg.fun"
 
-options = webdriver.ChromeOptions()
+options = webdriver.FirefoxOptions()
 options.add_argument("--headless")
-options.add_argument("--disable-gpu")
 ser = Service()
 if driver_loc:
     ser.executable_path=driver_loc
 
+def create_driver():
+    return webdriver.Firefox(service=ser, options=options)
+
 # Get an entry to the website
-driver1 = webdriver.Chrome(service=ser, options=options) if driver_loc else webdriver.Chrome(options=options)
+driver1 = create_driver()
 driver1.get(url)
 entries = driver1.find_elements(By.XPATH, "//*[@id=\"list-wrap\"]/a")
 entry = entries[0].get_attribute('href')
 driver1.close()
 
 # Open the website and fetch all articles
-driver2 = webdriver.Chrome(options=options)
+driver2 = create_driver()
 driver2.get(entry)
 articles = driver2.find_elements(By.XPATH, "//a[contains(@href, '/archives/')]")
 
