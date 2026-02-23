@@ -4,7 +4,7 @@
 
 (define (port-string? x) (exact-integer? (read (open-input-string x))))
 (define option-spec
-    `((port (single-char #\p) (value #t) (predicate ,port-string?))
+    `((port (single-char #\p) (value #t) (predicate ,port-string?) (required? #t))
       (driver (single-char #\d) (value #t) (required? #f))))
 (define options (getopt-long (command-line) option-spec))
 (define port (option-ref options 'port #f))
