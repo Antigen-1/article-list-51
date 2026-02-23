@@ -20,7 +20,7 @@ driver2.get(entry)
 articles = driver2.find_elements(By.XPATH, "//a[contains(@href, '/archives/')]")
 
 # fetch information
-table = {}
+coll = []
 for a in articles:
     text = ""
     titles = a.find_elements(By.XPATH, './/div/div[2]/div/h2')
@@ -28,8 +28,10 @@ for a in articles:
         text = titles[0].text
     else:
         continue
-    table[a.get_attribute('href')] = text
+    # url title date
+    coll.append([a.get_attribute('href'), text, a.find_element(By.XPATH, ".//div/div[2]/div/div/span[2]").text])
 
-for key, value in table.items():
-    print(len(key), len(value))
-    print(key, value, end="", sep="")
+print(len(coll))
+for record in coll:
+    print(*map(len, record))
+    print(*record, end="", sep="")

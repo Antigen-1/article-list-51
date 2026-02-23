@@ -1,44 +1,68 @@
-(import (ice-9 rdelim) (ice-9 popen) (ice-9 match) (sxml simple) (web server))
+#!/bin/env guile3.0
+!#
+(import (ice-9 rdelim) (ice-9 popen) (ice-9 match) (ice-9 getopt-long) (sxml simple) (web server) (srfi srfi-28))
+
+(define option-spec
+    '((port (single-char #\p) (value #t))))
+(define options (getopt-long (command-line) option-spec))
+(define port (option-ref options 'port #f))
+(if (not port) (error "A port number must be supplied"))
+(define port-number (read (open-input-string port)))
+(if (not (exact-integer? port-number))
+    (error "Port numbers must be exact integers"))
+
+(define pwd (dirname (current-filename)))
+
+(define (directory-exists? p)
+    (and (file-exists? p) (eq? (stat:type (stat p)) 'directory)))
 
 (define (read-string k in)
     (with-output-to-string
         (lambda ()
             (let loop ((n 0))
                 (if (= n k) #f (begin (write-char (read-char in)) (loop (+ n 1))))))))
-(define (parse p)
+(define (string->values str)
+    (define in (open-input-string str))
     (let loop ()
-        (define head (read-line p))
-        (cond ((eof-object? head) '())
-              (else (let* ((head-port (open-input-string head))
-                           (l1 (read head-port))
-                           (l2 (read head-port))
-                           (s1 (read-string l1 p))
-                           (s2 (read-string l2 p)))
-                        (cons (list s1 s2) (loop)))))))
+        (define v (read in))
+        (if (eof-object? v) '() (cons v (loop)))))
+(define (parse p)
+    (define amount (read (open-input-string (read-line p))))
+    (let loop ((n 0))
+        (cond ((= n amount) '())
+              (else (cons (map (lambda (v) (read-string v p)) (string->values (read-line p))) (loop (+ n 1)))))))
 
 (define (fetch)
-    (define port
-        (open-pipe* OPEN_READ "python" (in-vicinity (dirname (current-filename)) "scratcher.py")))
+    (define in
+        (open-pipe* OPEN_READ python (in-vicinity pwd "scratcher.py")))
     (dynamic-wind
         (lambda () #f)
-        (lambda () (parse port))
-        (lambda () (close-pipe port))))
+        (lambda () (parse in))
+        (lambda () (close-pipe in))))
 
 (define (generate-rss-feed)
     (with-output-to-string
         (lambda ()
             (sxml->xml
                 `(rss (@ (version "2.0")) 
-                    (channel (title "51") (link "https://51cg.fun/") (description "My favorite porn website")
+                    (channel (title "51") (link "https://51cg.fun/") (description "My favorite porn website") (ttl 60)
                         ,@(map 
                             (lambda (p)
                                 (match p
-                                    ((url title)
-                                     `(item (title ,title) (link ,url)))))
+                                    ((url title date)
+                                     `(item (title ,title) (link ,url) (pubDate ,date)))))
                             (fetch))))))))
 
 (define (handler req req-body)
     (values '((content-type . (text/xml)))
             (generate-rss-feed)))
 
-(run-server handler)
+(define venv (in-vicinity pwd "scratcher"))
+(define python (in-vicinity venv (in-vicinity "bin" "python3")))
+(if (directory-exists? venv)
+    #f
+    (system* "python3" "-m" "venv" venv))
+
+(system* python "-m" "pip" "install" "-I" "selenium")
+
+(run-server handler 'http `(#:port ,port-number))
