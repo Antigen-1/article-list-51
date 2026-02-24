@@ -20,7 +20,7 @@
 (if (directory-exists? venv)
     #f
     (system* "python3" "-m" "venv" venv))
-(system (format "source ~s && pip3 install -I selenium" activate))
+(system (format "source ~s && pip3 install selenium" activate))
 
 (define (read-string k in)
     (with-output-to-string
