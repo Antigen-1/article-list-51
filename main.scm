@@ -5,14 +5,23 @@
 (define (port-string? x) (exact-integer? (read (open-input-string x))))
 (define option-spec
     `((port (single-char #\p) (value #t) (predicate ,port-string?) (required? #t))
-      (driver (single-char #\d) (value #t) (required? #f))))
+      (driver (single-char #\d) (value #t) (required? #f))
+      (chrome (single-char #\c) (value #t) (required? #f))))
 (define options (getopt-long (command-line) option-spec))
 (define port (option-ref options 'port #f))
 (define port-number (read (open-input-string port)))
 (define driver (option-ref options 'driver #f))
+(define chrome (option-ref options 'chrome #f))
 
+;; Path utilities
 (define (directory-exists? p)
     (and (file-exists? p) (eq? (stat:type (stat p)) 'directory)))
+(define (which executable)
+  (if (access? executable X_OK)
+      executable
+      (let* ((dirs (parse-path (getenv "PATH")))
+             (path (search-path dirs executable)))
+        (if (and path (access? path X_OK)) path #f))))
 
 (define pwd (dirname (current-filename)))
 (define venv (in-vicinity pwd "scratcher"))
@@ -41,7 +50,11 @@
 (define (fetch)
     (define in
         (open-pipe* OPEN_READ "sh" "-c" 
-            (string-join `(,(format "source ~s" activate) "&&" "python3" ,(format "~s" (in-vicinity pwd "scratcher.py")) ,@(if driver (list "-d" driver) '())))))
+            (string-join `(,(format "source ~s" activate) "&&" "python3" ,(format "~s" (in-vicinity pwd "scratcher.py")) 
+                           "-d"
+                           ,(which (if driver driver "chromedriver"))
+                           "-c"
+                           ,(which (if chrome chrome "chrome"))))))
     (dynamic-wind
         (lambda () #f)
         (lambda () (parse in))

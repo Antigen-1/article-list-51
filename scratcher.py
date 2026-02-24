@@ -1,24 +1,25 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.firefox.service import Service
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 import argparse
 
 parser = argparse.ArgumentParser(prog='scratcher')
-parser.add_argument('-d', '--driver', default=False)
+parser.add_argument('-d', '--driver', required=True)
+parser.add_argument('-c', '--chrome', required=True)
 args = parser.parse_args()
-driver_loc = args.driver
 
 url = "https://51cg.fun"
 
 options = Options()
 options.add_argument("--headless")
+options.add_argument("--disable-gpu")
+options.binary_location = args.chrome
 ser = Service()
-if driver_loc:
-    ser.executable_path=driver_loc
+ser.path = args.driver
 
 def create_driver():
-    return webdriver.Firefox(service=ser, options=options)
+    return webdriver.Chrome(service=ser, options=options)
 
 # Get an entry to the website
 driver1 = create_driver()
