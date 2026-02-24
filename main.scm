@@ -16,11 +16,11 @@
 
 (define pwd (dirname (current-filename)))
 (define venv (in-vicinity pwd "scratcher"))
-(define python (in-vicinity venv (in-vicinity "bin" "python3")))
+(define activate (in-vicinity venv (in-vicinity "bin" "activate")))
 (if (directory-exists? venv)
     #f
     (system* "python3" "-m" "venv" venv))
-(system* python "-m" "pip" "install" "-I" "selenium")
+(system (format "source ~s && pip3 install -I selenium" activate))
 
 (define (read-string k in)
     (with-output-to-string
@@ -40,7 +40,8 @@
 
 (define (fetch)
     (define in
-        (apply open-pipe* OPEN_READ python (in-vicinity pwd "scratcher.py") (if driver (list "-d" driver) '())))
+        (open-pipe* OPEN_READ "sh" "-c" 
+            (string-join `(,(format "source ~s" activate) "&&" "python3" ,(format "~s" (in-vicinity pwd "scratcher.py")) ,@(if driver (list "-d" driver) '())))))
     (dynamic-wind
         (lambda () #f)
         (lambda () (parse in))
