@@ -2,17 +2,6 @@
 !#
 (import (ice-9 rdelim) (ice-9 popen) (ice-9 match) (ice-9 getopt-long) (ice-9 threads) (sxml simple) (web server) (srfi srfi-28) (srfi srfi-18))
 
-(define (port-string? x) (exact-integer? (read (open-input-string x))))
-(define option-spec
-    `((port (single-char #\p) (value #t) (predicate ,port-string?) (required? #t))
-      (driver (single-char #\d) (value #t) (required? #f))
-      (chrome (single-char #\c) (value #t) (required? #f))))
-(define options (getopt-long (command-line) option-spec))
-(define port (option-ref options 'port #f))
-(define port-number (read (open-input-string port)))
-(define driver (option-ref options 'driver #f))
-(define chrome (option-ref options 'chrome #f))
-
 ;; Path utilities
 (define (directory-exists? p)
     (and (file-exists? p) (eq? (stat:type (stat p)) 'directory)))
@@ -22,6 +11,17 @@
       (let* ((dirs (parse-path (getenv "PATH")))
              (path (search-path dirs executable)))
         (if (and path (access? path X_OK)) path #f))))
+
+(define (port-string? x) (exact-integer? (read (open-input-string x))))
+(define option-spec
+    `((port (single-char #\p) (value #t) (predicate ,port-string?) (required? #t))
+      (driver (single-char #\d) (value #t) (predicate ,which) (required? #f))
+      (chrome (single-char #\c) (value #t) (predicate ,which) (required? #f))))
+(define options (getopt-long (command-line) option-spec))
+(define port (option-ref options 'port #f))
+(define port-number (read (open-input-string port)))
+(define driver (option-ref options 'driver #f))
+(define chrome (option-ref options 'chrome #f))
 
 (define pwd (dirname (current-filename)))
 (define venv (in-vicinity pwd "scratcher"))
