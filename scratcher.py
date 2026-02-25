@@ -23,16 +23,14 @@ def create_driver():
     return webdriver.Chrome(service=ser, options=options)
 
 # Get an entry to the website
-driver1 = create_driver()
-driver1.get(url)
-entries = driver1.find_elements(By.XPATH, "//*[@id=\"list-wrap\"]/a")
+driver = create_driver()
+driver.get(url)
+entries = driver.find_elements(By.XPATH, "//*[@id=\"list-wrap\"]/a")
 entry = entries[0].get_attribute('href')
-driver1.quit()
 
 # Open the website and fetch all articles
-driver2 = create_driver()
-driver2.get(entry)
-articles = driver2.find_elements(By.XPATH, "//a[contains(@href, '/archives/')]")
+driver.get(entry)
+articles = driver.find_elements(By.XPATH, "//a[contains(@href, '/archives/')]")
 
 # fetch information
 coll = []
@@ -45,7 +43,7 @@ for a in articles:
         continue
     # url title date
     coll.append([a.get_attribute('href'), text, a.find_element(By.XPATH, ".//div/div[2]/div/div/span[2]").text])
-driver2.quit()
+driver.quit()
 
 print(len(coll))
 for record in coll:
