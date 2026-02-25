@@ -29,7 +29,7 @@
 (if (directory-exists? venv)
     #f
     (system* "python3" "-m" "venv" venv))
-(system (format "source ~s && pip3 install selenium" activate))
+(system (format ". ~s && pip3 install selenium" activate))
 
 (define (read-string k in)
     (with-output-to-string
@@ -50,7 +50,7 @@
 (define (fetch)
     (define in
         (open-pipe* OPEN_READ "sh" "-c" 
-            (string-join `(,(format "source ~s" activate) "&&" "python3" ,(format "~s" (in-vicinity pwd "scratcher.py")) 
+            (string-join `(,(format ". ~s" activate) "&&" "python3" ,(format "~s" (in-vicinity pwd "scratcher.py")) 
                            "-d"
                            ,(which (if driver driver "chromedriver"))
                            "-c"
