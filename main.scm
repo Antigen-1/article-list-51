@@ -62,15 +62,11 @@
 
 ; Cache
 (define records (fetch))
-(define time (time->seconds (current-time)))
-(define sep 3600)
 (define update-thread
     (make-thread
         (lambda ()
-            (if (>= (- (time->seconds (current-time)) time) sep)
-                (begin (set! time (current-time))
-                       (set! records (fetch))))
-            records)))
+            (sleep 3600)
+            (set! records (fetch)))))
 
 (define (generate-rss-feed)
     (with-output-to-string
