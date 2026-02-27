@@ -65,8 +65,18 @@
 (define update-thread
     (make-thread
         (lambda ()
-            (sleep 3600)
-            (set! records (fetch)))))
+            (define err (current-error-port))
+            (let loop ()
+                (with-handlers 
+                    (lambda (exn)
+                        (display exn err)
+                        (newline err)
+                        (loop))
+                    (lambda ()
+                        (sleep 3600)
+                        (set! records (fetch))
+                        (loop))
+                    #:unwind? #t)))))
 
 (define (generate-rss-feed)
     (with-output-to-string
