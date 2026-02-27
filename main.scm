@@ -67,16 +67,15 @@
         (lambda ()
             (define err (current-error-port))
             (let loop ()
-                (with-handlers 
+                (with-exception-handler
                     (lambda (exn)
                         (display exn err)
-                        (newline err)
-                        (loop))
+                        (newline err))
                     (lambda ()
                         (sleep 3600)
-                        (set! records (fetch))
-                        (loop))
-                    #:unwind? #t)))))
+                        (set! records (fetch)))
+                    #:unwind? #t)
+                (loop)))))
 
 (define (generate-rss-feed)
     (with-output-to-string
