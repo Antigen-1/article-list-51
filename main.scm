@@ -82,7 +82,7 @@
         (lambda ()
             (sxml->xml
                 `(rss (@ (version "2.0")) 
-                    (channel (title "51") (link "https://51cg.fun/") (description "My favorite porn website") (ttl 60)
+                    (channel (title "51") (link "https://51cgg45.com/") (description "My favorite porn website") (ttl 60)
                         ,@(map 
                             (lambda (p)
                                 (match p

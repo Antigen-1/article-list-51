@@ -9,7 +9,7 @@ parser.add_argument('-d', '--driver', required=True)
 parser.add_argument('-c', '--chrome', required=True)
 args = parser.parse_args()
 
-url = "https://51cg.fun"
+url = "https://51cgg45.com"
 
 options = Options()
 options.add_argument("--headless")
